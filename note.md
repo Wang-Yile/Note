@@ -119,6 +119,10 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 常数较线段树略小，只能维护前缀信息，可以利用树状数组的结构性质完成一些树套树（例如 P2617 单点修区间 k 小值）可以做逆序对。
 
+二维树状数组是二维的树状数组。
+
+**例题** P4514
+
 ### 0-1 Trie 树
 
 按二进制位插入 Trie 树。
@@ -145,7 +149,7 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 拓展 BSGS 因为 $(a, p) \ne 1$，所以不能直接使用逆元。$a^x \equiv b \pmod p \Rightarrow \frac a {d_1} \cdot a^{x - 1} \equiv \frac b {d_1} \pmod {\frac p {d_1}}$，如此重复直到 $(a, \frac p {d_1 d_2 \dots d_k}) = 1$。记 $D = d_1 d_2 \dots d_k$，原式转化为 $\frac {a^k} D \cdot a^{x - k} \equiv \frac b D \pmod {\frac p D}$，一定有 $(\frac {a^k} D, \frac p D) = 1$，即化为 $a^{x - k} \equiv \frac b {a^k} \pmod {\frac p D}$，用标准 BSGS 求解，答案加上 $k$ 即可。但需要特判答案小于 $k$ 的情况。
 
-**例题** P3846, P4195
+**例题** P2485, P3846, P4195
 
 ### 二次剩余
 
