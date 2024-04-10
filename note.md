@@ -47,6 +47,12 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 **例题** LOJ #160, P1064, P1273, P1757, P2014, P2015
 
+### 状压 DP
+
+通过一些整数值描述当前局面，为下一次决策提供参考。
+
+**例题** P1896, P2150, P4363
+
 ### 单调队列优化 DP
 
 **适用** 求极值，且决策点的贡献关于 $j$ 单调的转移方程。
@@ -140,6 +146,48 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 ## 字符串
 
 ## 数论
+
+### 莫比乌斯函数
+
+**定义**
+
+$$\mu(n) = \begin{cases} 1, & n = 1, \\ 0, & \exist x \in \mathbf{N}, x \in [2, +\infty), x^2 \mid n, \\ (-1)^k, &\text{otherwise, k 是 n 本质不同的素因子个数}.\end{cases}$$
+
+**性质**
+
+$*$ 表示狄利克雷卷积，则
+
+$$\begin{aligned} \varphi * 1 & = \varepsilon \\ \varepsilon * \mu & = \varphi \end{aligned}$$
+
+即
+
+$$\sum\limits_{d \mid n} \mu(d) = \begin{cases} 1, & n = 1, \\ 0, & \text{otherwise}.\end{cases} = \varepsilon(n)$$
+
+推广
+
+$$[(i, j) = 1] = \sum\limits_{d \mid (i, j)} \mu(d)$$
+
+**线性筛**
+
+```cpp
+mu[1] = 1;
+for (int i = 2; i <= n; ++i) {
+    if (!vis[i]) {
+        pr[++tail] = i;
+        mu[i] = -1;
+    }
+    for (int j = 1; j <= tail && i * pr[j] <= n; ++j) {
+        vis[i * pr[j]] = true;
+        if (i % pr[j] == 0) {
+            mu[i * pr[j]] = 0;
+            break;
+        }
+        mu[i * pr[j]] = -mu[i];
+    }
+}
+```
+
+**例题** P1829, P2257, P2522, P2568, P3327, SP5971
 
 ### BSGS / exBSGS
 
