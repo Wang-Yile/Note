@@ -53,6 +53,12 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 **例题** P1896, P2150, P4363
 
+### 状态设计优化 DP
+
+通过合并状态或者重新设计特征状态优化无用状态数，或者优化转移复杂度。需要结合具体题目具体分析。
+
+**例题** P5664, AT_chokudai_S001_h
+
 ### 单调队列优化 DP
 
 **适用** 求极值，且决策点的贡献关于 $j$ 单调的转移方程。
@@ -147,15 +153,60 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 ## 数论
 
-### 莫比乌斯函数
+### 数论函数
+
+#### 积性函数
+
+积性函数：对于任何互质的整数有 $f(a \cdot b) = f(a) \cdot f(b)$ 的数论函数。  
+完全积性函数：对于任何整数有 $f(a \cdot b) = f(a) \cdot f(b)$ 的数论函数。
+
+常见积性函数：欧拉函数 $\varphi$，莫比乌斯函数 $\mu$，因数个数函数 $\tau$，因数和函数 $\sigma$。
+
+$\pi$ 函数不是积性函数。
+
+**性质 1** 若 $f(x), g(x)$ 均为积性函数，则 $h(x) = f(x) \cdot g(x)$ 也为积性函数。
+
+#### 欧拉函数
+
+欧拉函数 $\varphi(n)$ 描述小于 $n$ 的与 $n$ 互素的正整数个数。
+
+**计算公式**
+
+$$\varphi(n) = n \cdot \prod\limits_{p \mid n}{(1 - p^{-1})}$$
+
+**欧拉定理** 若正整数 $a, p$ 互素，$a^{\varphi(p)} \equiv 1 \pmod p$。
+
+**欧拉降幂** 若 $k > \varphi(p)$，$a^k \equiv a^{k \mod \varphi(p) + \varphi(p)} \pmod p$。
+
+**线性筛**
+
+```cpp
+phi[1] = 1;
+for (int i = 2; i <= n; ++i) {
+    if (!vis[i]) {
+        pr[++tail] = i;
+        phi[i] = i - 1;
+    }
+    for (int j = 1; j <= tail && i * pr[j] <= n; ++j) {
+        vis[i * pr[j]] = true;
+        if (i % pr[j] == 0) {
+            phi[i * pr[j]] = phi[i] * pr[j];
+            break;
+        }
+        phi[i * pr[j]] = phi[i] * phi[pr[j]];
+    }
+}
+```
+
+**例题** 
+
+#### 莫比乌斯函数
 
 **定义**
 
 $$\mu(n) = \begin{cases} 1, & n = 1, \\ 0, & \exist x \in \mathbf{N}, x \in [2, +\infty), x^2 \mid n, \\ (-1)^k, &\text{otherwise, k 是 n 本质不同的素因子个数}.\end{cases}$$
 
-**性质**
-
-$*$ 表示狄利克雷卷积，则
+**性质 1** $*$ 表示狄利克雷卷积，则
 
 $$\begin{aligned} \varphi * 1 & = \varepsilon \\ \varepsilon * \mu & = \varphi \end{aligned}$$
 
@@ -189,7 +240,9 @@ for (int i = 2; i <= n; ++i) {
 
 **例题** P1829, P2257, P2522, P2568, P3327, SP5971
 
-### BSGS / exBSGS
+### 同余
+
+#### BSGS / exBSGS
 
 解形如 $a^x \equiv b \pmod p$ 的同余方程，拓展版本可以 $(a, p) \ne 1$。BSGS 经过二次拓展可以解一定限制下的 $k$ 次同余方程。（详见 [OI-Wiki](https://oi.wiki/math/number-theory/discrete-logarithm/#%E8%BF%9B%E9%98%B6%E7%AF%87)）
 
@@ -199,7 +252,7 @@ for (int i = 2; i <= n; ++i) {
 
 **例题** P2485, P3846, P4195
 
-### 二次剩余
+#### 二次剩余
 
 解形如 $x^2 \equiv a \pmod p$ 的同余方程，$p$ 为奇素数，有 Cipolla 算法。若 $p$ 不是奇素数，可以通过其他算法解决，这里不讨论。欧拉判别式：在上述条件下，$a$ 是模 $p$ 的二次剩余的充要条件是 $a^{\frac {p - 1} 2} \equiv 1 \pmod p$。Cipolla 算法通过找到 $r$ 使得 $r^2 - a$ 是模 $p$ 的二次非剩余，令 $\text i^2 = r^2 - a$，有两定理：$\text i^p \equiv -\text i \pmod p$；$(A + B)^{\text i} \equiv A^{\text i} + B^{\text i} \pmod p$。通过推导可知 $x^2 \equiv (a + \text i)^{p + 1} \pmod p$，即 $x \equiv \pm (a + \text i)^{\frac {p + 1} 2} \pmod p$。
 
@@ -230,3 +283,15 @@ $$dis = \sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}$$
 $$dis = \sqrt{(a_1 - b_1)^2 + (a_2 - b_2)^2 + \dots + (a_k - b_k)^2}$$
 
 **例题** P2625
+
+## 莫队和分块思想
+
+### 根号分治
+
+通过在不同情况下使用复杂度为两个极端的暴力，达到相对均衡的时间复杂度。
+
+**例题** CF506D, ABC259Ex
+
+### 其他分块思想
+
+见 BSGS / exBSGS。
