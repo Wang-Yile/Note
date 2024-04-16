@@ -179,13 +179,297 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 ## 图论
 
+### 网络流
+
+### 图的匹配
+
+#### 二分图最大匹配
+
+##### 增广路算法
+
+增广路算法的过程是尝试将当前点加入匹配，枚举该点可到达的未处理过的点。如果未匹配则将其与当前点匹配；否则尝试拆除其所在的匹配，再与当前点匹配。
+
+其本质为寻找一条增广路，其两端的边均未匹配，然后执行增广，把路径上的匹配与未匹配反转，于是增加了一个匹配数。
+
+根据**增广路定理**，当图上不存在增广路时，得到最大匹配。
+
+有两种实现方式。
+
+**DFS 版**
+
+```cpp
+bool vis[1005];
+int match[1005];
+static inline bool dfs(int u) {
+    for (auto v : vec[u]) {
+        if (!vis[v]) {
+            vis[v] = true;
+            if (!match[v] || dfs(match[v])) {
+                match[u] = v;
+                match[v] = u;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+int ans = 0;
+for (int i = 1; i <= n; ++i) { // n 是左部图大小
+    memset(vis, false, sizeof vis);
+    if (dfs(i))
+        ++ans;
+}
+```
+
+**BFS 版**
+
+相对麻烦，但是是带花树算法的基础。
+
+```cpp
+int ans = 0;
+for (int i = 1; i <= n; ++i) {
+    memset(vis, false, sizeof vis);
+    queue<int> q;
+    q.push(i);
+    vis[i] = true;
+    bool flag = false;
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (auto v : vec[u]) {
+            if (!vis[v]) {
+                pre[v] = u;
+                vis[v] = true;
+                if (!match[v]) {
+                    while (v) {
+                        int tmp = match[pre[v]];
+                        match[v] = pre[v];
+                        match[pre[v]] = v;
+                        v = tmp;
+                    }
+                    flag = true;
+                    ++ans;
+                    break;
+                }
+                q.push(match[v]);
+            }
+        }
+        if (flag)
+            break;
+    }
+}
+```
+
+##### 网络流建模
+
+进行二分图染色，每条边从黑点向白点定向，源点连向所有黑点，所有白点连向汇点，容量均为 $1$，最大流即可。
+
+#### 一般图最大匹配（带花树算法 Blossom Algorithm）
+
+带花树算法是扩展的增广路算法，通过处理奇环实现在一般图上的运作。_无需理会为什么会有某些规定，因为在增广路算法中就是如此，只不过这里特别强调出来。_
+
+带花树算法基于 BFS 版的增广路算法。其在寻找点 $x$ 开始的增广路时会得到一棵 BFS 生成树。
+
+定义标记 $col_u$：（距离定义为两点之间最短路径的边数）
+
+- 若点 $u$ 未访问过，则 $col_u = 0$；
+- 若点 $u$ 在生成树上，且与 $x$ 的距离为 **偶数**，则 $col_u = 1$；
+- 若点 $u$ 在生成树上，且与 $x$ 的距离为 **奇数**，则 $col_u = 2$；
+
+规定在 BFS 的过程中，进入队列的只有 $col_u = 1$ 的点 $u$。
+
+$pre_u, match_u$ 变量与增广路算法保持一致。
+
+---
+
+定义 **花** 表示连通的一些点组成的点集，**缩花** 即为合并两个点集。
+
+扫描 $u$ 的出边连向的点 $v$ 时，有以下情况：
+
+- $col_v = 0$
+    - $match_v = 0$，说明已找到增广路，增广即可。
+    - $match_v \ne 0$，同增广路算法，将 $match_v$ 入队，设置 $col_v = 2, col_{match_v} = 1$；
+- 否则
+    - $u$ 与 $v$ 在同一朵花内，忽略。
+    - $col_v = 1$，说明找到奇环，需要 **缩花**。
+    - $col_v = 2$，说明找到偶环，增广路算法可以正确处理，忽略。
+
+---
+
+接下来讨论 **缩花**。
+
+**定理** 设原图为 $G$，缩花后的图为 $G'$，则
+
+- 若 $G$ 上存在增广路，则 $G'$ 上也存在；
+- 若 $G'$ 上存在增广路，则 $G$ 上也存在。
+
+为了方便，设缩花后的花根存放在与 $x$ 距离最小的点上。
+
+设将 $u$ 和 $v$ 缩花，$u$ 的总花根为 $rt$。
+
+考虑寻找总花根：先跳到 $u$ 和 $v$ 各自的分花根，不断设置 $u = pre_{match_u}, v = pre_{match_v}$，也就是向生成树的父亲的方向跳两级，直到 $u = v$，此时 $u$ 为总花根。
+
+然后进行 **收缩（Shrink）** 操作，将 $u - rt$ 和 $v - rt$ 两条链缩到总花根上。
+
+不妨考虑收缩 $u - rt$ 这条链：反向建立 $pre$，将所有链上 $col = 2$ 的点向外增广（入队），并将链上的分花根合并到总花根上。
+
+---
+
+模拟缩花工作流程：尝试对 $x$ 增广。
+
+![](https://cdn.luogu.com.cn/upload/image_hosting/2wm291sk.png)
+
+其中 $1 \leftrightarrow 2, 3 \leftrightarrow u, 4 \leftrightarrow v$ 是三条已匹配边，$col_x = col_2 = col_u = col_v = 1, col_1 = col_3 = col_4 = 2$。
+
+此时找到 $u \leftrightarrow v$ 连接了两个 $col = 1$ 的点，说明有奇环。
+
+寻找总花根：已跳至 $u, v$ 各自的分花根。$u$ 跳两级得到 $2$，$v$ 跳两级也得到 $2$，说明 $2$ 是总花根。
+
+![](https://cdn.luogu.com.cn/upload/image_hosting/3pxwv7n4.png)
+
+缩花
+
+![](https://cdn.luogu.com.cn/upload/image_hosting/1bn4y903.png)
+
+收缩路径 $u - 2$，将 $3$ 入队，$pre_u = v$。收缩路径 $v - 2$，将 $4$ 入队，$pre_v = u$。图中黄色表示原来的 $pre$，橙色表示被修改的 $pre$。
+
+![](https://cdn.luogu.com.cn/upload/image_hosting/gepxt9c9.png)
+
+于是完成了一次缩花，本次缩花并未增加匹配数。
+
+---
+
+代码实现
+
+```cpp
+int f[1005];
+static inline int find(int x) {
+    if (f[x] == x) {
+        return x;
+    }
+    return f[x] = find(f[x]);
+}
+
+int col[1005];
+int pre[1005];
+int match[1005];
+bool vis[1005];
+queue<int> q;
+
+static inline int lca(int u, int v) { // 寻找总花根
+    memset(vis, false, sizeof vis);
+    u = find(u); // 跳到分花根
+    v = find(v);
+    while (!vis[u]) {
+        vis[u] = true;
+        u = find(pre[match[u]]);
+        if (v)
+            swap(u, v);
+    }
+    return u;
+}
+
+static inline void shrink(int u, int v, int rt) { // 收缩
+    while (find(u) != rt) {
+        pre[u] = v;
+        v = match[u];
+        if (col[v] == 2) { // 向外増广
+            col[v] = 1;
+            q.push(v);
+        }
+        if (find(u) == u) { // 合并到总花根上
+            f[u] = rt;
+        }
+        if (find(v) == v) {
+            f[v] = rt;
+        }
+        u = pre[v];
+    }
+}
+
+static inline int BlossomAlgorithm() {
+    int ans = 0;
+    for (int i = 1; i <= n; ++i) {
+        if (match[i])
+            continue;
+        memset(col, 0, sizeof col);
+        for (int j = 1; j <= n; ++j)
+            f[j] = j;
+        while (!q.empty())
+            q.pop();
+        q.push(i);
+        col[i] = 1;
+        bool flag = false;
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+            for (auto v : vec[u]) {
+                if (!col[v]) {
+                    pre[v] = u;
+                    if (!match[v]) {
+                        while (v) { // 增广
+                            int tmp = match[pre[v]];
+                            match[v] = pre[v];
+                            match[pre[v]] = v;
+                            v = tmp;
+                        }
+                        flag = true;
+                        ++ans;
+                        break;
+                    }
+                    col[v] = 2;
+                    col[match[v]] = 1;
+                    q.push(match[v]);
+                } else {
+                    if (find(u) == find(v)) // 已经在同一朵花内
+                        continue;
+                    if (col[v] == 1) { // 奇环
+                        int rt = lca(u, v);
+                        shrink(u, v, rt); // 收缩 u - rt
+                        shrink(v, u, rt); // 收缩 v - rt
+                    }
+                }
+            }
+            if (flag)
+                break;
+        }
+    }
+    return ans;
+}
+```
+
+**例题** P6113
+
+**参考** [一般图最大匹配学习笔记 - Luogu lanos212](https://www.luogu.com.cn/article/yrj6im2x) [一般图最大匹配 - OI Wiki](https://oi-wiki.org/graph/graph-matching/general-match/)
+
 ## 字符串
 
 ### 哈希
 
-通过较少的信息描述大量的信息。字符串哈希的本质是：把字符串看作一个进制为字符集大小的大整数，在模意义下的十进制值。因此，哈希值不同的字符串一定不同，相同的字符串的哈希值一定相同。
+通过较少的信息描述大量的信息。哈希值不同的字符串一定不同，相同的字符串的哈希值一定相同。
 
 哈希值相同，原字符串不一定相同，这种情况称为**哈希冲突**。对此，哈希表等数据结构的处理方式是开散列或二次寻址；字符串匹配只能暴力扫一遍。实际竞赛中不常使用前述方法，而是尽可能使用优秀的哈希方法防止冲突。
+
+以下是一些常见哈希方法。
+
+#### 标准字符串哈希（BKDRHash）
+
+BKDRHash 的本质是：把字符串看作一个进制为 $base$ 的大整数，在模意义下的十进制数值。
+
+字符串 $s$ 的 BKDRHash 值定义为
+
+$$hs_s = \sum\limits_{i = 1}^{|s|} s_i \cdot base^{|s| - i}$$
+
+#### 数列哈希
+
+数列 $a_1, a_2, \dots, a_n$ 的哈希值定义为 $base^{a_1} + base^{a_2} + \dots + base^{a_n}$。
+
+#### 随机哈希
+
+即通过随机值替换 $base^k$。
+
+还有很多不同的哈希方法，例如 [基于 sin 的 Hash](https://www.luogu.com.cn/article/ih4e3v2o)、[APHash](https://ieeexplore.ieee.org/document/8462326/) [等](https://www.cnblogs.com/Stomach-ache/p/3724836.html)。
 
 #### 哈希冲突概率
 
@@ -211,7 +495,7 @@ $$\lim_{K \rightarrow \infty} P_{collision, N} \sim 1 - e^{- \frac {K(K - 1)} {2
 
 我曾考虑使用方差分析其均匀分布程度，但是忘记实现了。因此我们不妨使用 $\begin{cases} base &= 31 \\ mod &= 37191016349 \end{cases}$ 吧。
 
-**例题** P4513
+**例题** P4513, P6688
 
 ## 数论
 
