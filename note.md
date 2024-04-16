@@ -225,7 +225,27 @@ $$n = p_1^{a_1} p_2^{a_2} \dots p_k^{a_k}$$
 
 其中 $p_1, p_2, \dots, p_k$ 为互不相等的素数，指数 $a_i$ 为正整数。该分解式被称为 $n$ 的标准分解（唯一分解）。
 
-### 数论函数
+#### 数论分块
+
+数论分块一般用于求解和式
+
+$$S(n) = \sum\limits_{i = 1}^n f(i) g(\lfloor \frac n i \rfloor)$$
+
+其中 $f$ 的前缀和与 $g$ 均容易计算。
+
+记 $s(x) = \sum\limits_{i = 1}^x f(i)$，伪代码如下
+
+$$
+\begin{array}{ll}
+l = 1 \\
+\text{while} ~ l \le n: \\
+\qquad r = \left\lfloor \dfrac {n} {\left\lfloor \frac n l \right\rfloor} \right\rfloor \\
+\qquad ans += (s(r) - s(l - 1)) \cdot \left\lfloor \dfrac n l \right\rfloor \\
+\qquad l = r + 1
+\end{array}
+$$
+
+### 数论函数和筛法
 
 #### 积性函数
 
@@ -321,6 +341,56 @@ for (int i = 2; i <= n; ++i) {
 ```
 
 **例题** P1447, P1829, P2257, P2522, P2568, P3327, P3768, SP5971, UVA12888
+
+#### 杜教筛
+
+求数论函数 $f$ 的前缀和 $S$。
+
+$$S(n) = \sum\limits_{i = 1}^n f(i)$$
+
+考虑一个容易求前缀和的函数的 $g$，接下来 $*$ 表示狄利克雷卷积。
+
+$$
+\begin{aligned}
+&\sum\limits_{i = 1}^n (f * g)(i) \\
+= &\sum\limits_{i = 1}^n \sum\limits_{d \mid i} g(d) f(\frac i d) \\
+= &\sum\limits_{d = 1}^n g(d) \sum\limits_{i = 1}^{\lfloor \frac n d \rfloor} f(i) \\
+= &\sum\limits_{d = 1}^n g(d) S(\lfloor \frac n d \rfloor) \\
+= & g(1) S(n) + \sum\limits_{d = 2}^n g(d) S(\lfloor \frac n d \rfloor)
+\end{aligned}
+$$
+
+所以
+
+$$
+\begin{aligned}
+g(1) S(n) + \sum\limits_{d = 2}^n g(d) S(\lfloor \frac n d \rfloor) &= \sum\limits_{i = 1}^n (f * g)(i) \\
+S(n) &= \dfrac {\sum\limits_{i = 1}^n (f * g)(i) - \sum\limits_{d = 2}^n g(d) S(\lfloor \frac n d \rfloor)} {g(1)}
+\end{aligned}
+$$
+
+可以对 $\sum\limits_{d = 2}^n g(d) S(\lfloor \frac n d \rfloor)$ 使用数论分块，且 $\sum\limits_{i = 1}^n (f * g)(i)$ 容易求得，记忆化搜索即可。
+
+例如，求
+
+$$S(n) = \sum\limits_{i = 1}^n \varphi(i)$$
+
+知
+
+$$\varphi * 1 = \text{id}$$
+
+代入，得
+
+$$
+\begin{aligned}
+S(n) &= \dfrac {\sum\limits_{i = 1}^n \text{id}(i) - \sum\limits_{d = 2}^n 1(d) S(\lfloor \frac n d \rfloor)} {1(1)} \\
+&= \dfrac {n (n+1)} {2} - \sum\limits_{d = 2}^n S(\lfloor \frac n d \rfloor)
+\end{aligned}
+$$
+
+数论分块即可。
+
+**例题** P4213
 
 ### 同余理论
 
