@@ -127,19 +127,20 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
     - P2633 / SP10628 Count on a tree
 - 区间最值操作 & 区间历史最值线段树
     - 【模板】区间历史最值 P4314
-    - 【模板】区间最值操作 & 区间历史最值 P6242 **需要补题**
+    - 【模板】区间最值操作 & 区间历史最值 P6242
     - SP1557 GSS2 - Can you answer these queries II
-- 历史和线段树 **需要学习 & 补题**
+- 历史和线段树
     - P8868 [NOIP2022] 比赛
     - CF1824D LuoTianyi and the Function
 - 线段树合并
     - 【模板】线段树合并 P3224, P4556
     - P4577 [FJOI2018] 领导集团问题
-- 线段树分裂 **需要学习**
+    - P4197 Peaks / P7834 [ONTAK2010] Peaks 加强版
+- 线段树分裂
     - 【模板】线段树分裂 P5494
 - 线段树二分
     - P4559 [JSOI2018] 列队
-- 线段树分治 **需要学习**
+- 线段树分治
     - 【模板】线段树分治 P5787
 
 **好题**
@@ -171,7 +172,7 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 ### Trie 树
 
-又称单词查找树，通过一种树形结构查找单词。典型应用是用于保存、统计和排序大量的字符串。
+又称单词查找树，通过一种树形结构查找单词。典型应用是保存、统计和排序大量的字符串。
 
 **例题** P2580, P5149
 
@@ -179,9 +180,82 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 ## 图论
 
-### 网络流
+### 图的生成树
+
+图的生成树是图的一个无环连通子图，且如果两点在图上连通，它们在生成树上仍连通。
+
+#### Kruskal 算法和 Kruskal 重构树
+
+Kruskal 算法用于寻找无向图的最小 / 最大生成树。以下内容均以最小生成树为例。
+
+基于贪心思想，每次尝试将最小的边加入生成树，如果这条边连接的点在生成树上尚未连通，则这条边在生成树上。这样得到的生成树是 Kruskal 生成树。
+
+当找到一条在生成树上的边时，会合并两个集合，此时新建一个点，点权为这条边的边权，左右儿子分别为这两个集合的根节点，并将新建点设为新集合的根。如此得到的树称为 Kruskal 重构树。
+
+Kruskal 重构树有以下性质：
+
+- 是一棵有根二叉树；
+- 是一个大根堆；
+- 有恰好 $n$ 个叶子节点；
+- 重构树上 $\text{LCA}(u, v)$ 的权值表示原图上 $u$ 到 $v$ 的所有路径的最大边权最小值；
+- 重构树上的叶子结点就是原图中的节点，非叶子节点都是原图的一条边；
+- 如果原图不连通，则 Kruskal 重构树是重构树森林，每棵树独立满足所有 Kruskal 重构树的性质；
+- 重构树上至多有 $2 \cdot n - 1$ 个节点，当且仅当原图连通时取等。
+
+**例题** P1967, P7834, P9235
+
+**参考** [Kruskal 重构树总结 - Luogu - LawrenceSivan](https://www.luogu.com.cn/article/jzk4d839)
+
+### 图连通性
+
+#### Tarjan 算法
+
+找一棵 DFS 生成树，将进入点 $u$ 的时间戳定义为 $dfn_u$，从点 $u$ 开始不经过其与生成树上父亲的连边可以到达的最小的时间戳定义为 $low_u$，不妨定义该生成树为 Tarjan 生成树。基于此，处理图连通性问题。
+
+#### 割点 / 点双连通分量
+
+割点定义为：删除该点及其所有连边后，使得原图不连通的点。
+
+在 Tarjan 生成树上，这表现为：
+- 若 $u$ 是树根，则 $u$ 在树上有至少两个孩子；
+- 否则只需 $low_v \ge dfn_u$。
+
+形式化地，对于一个极大子图，如果其不存在割点，那么这个子图就是一个点双连通分量。  
+需要指出，
+
+**例题** P3388, P8435
+
+#### 割边 / 边双连通分量
+
+割边定义为：删除该边后，使得原图不连通的边。
+
+在 Tarjan 生成树上，这表现为：点 $u$ 与点 $v$ 之间的连边是割边，当且仅当这样的边只有一条且 $low_v > dfn_u$。
+
+形式化地，对于一个极大子图，如果其不存在割边，那么这个子图就是一个边双连通分量。
+
+**例题** P8436
+
+#### 圆方树
+
+圆方树将无向图转化为树以处理一些问题。
+
+对于一个无向图，其圆方树的构造过程如下：
+
+- 原图中的点被称为**圆点**。
+- 求得原图中所有点双连通分量，对每一个点双都新建一个**方点**；
+- 每个方点向其对应的点双连通分量里的所有圆点连边，这些连边组成圆方树。
+
+圆方树有以下性质：
+
+- 圆点仅与方点连边，方点仅与圆点连边；
+- 任何一条路径都是圆点和方点交错出现的；
+- 如果原图连通，则圆方树是一棵树；
+
+**例题** CF487E
 
 ### 图的匹配
+
+图的匹配是无向图的一个边集，该边集内所有的边不共端点。
 
 #### 二分图最大匹配
 
@@ -197,69 +271,11 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 **DFS 版**
 
-```cpp
-bool vis[1005];
-int match[1005];
-static inline bool dfs(int u) {
-    for (auto v : vec[u]) {
-        if (!vis[v]) {
-            vis[v] = true;
-            if (!match[v] || dfs(match[v])) {
-                match[u] = v;
-                match[v] = u;
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-int ans = 0;
-for (int i = 1; i <= n; ++i) { // n 是左部图大小
-    memset(vis, false, sizeof vis);
-    if (dfs(i))
-        ++ans;
-}
-```
+十分简单。
 
 **BFS 版**
 
 相对麻烦，但是是带花树算法的基础。
-
-```cpp
-int ans = 0;
-for (int i = 1; i <= n; ++i) {
-    memset(vis, false, sizeof vis);
-    queue<int> q;
-    q.push(i);
-    vis[i] = true;
-    bool flag = false;
-    while (!q.empty()) {
-        int u = q.front();
-        q.pop();
-        for (auto v : vec[u]) {
-            if (!vis[v]) {
-                pre[v] = u;
-                vis[v] = true;
-                if (!match[v]) {
-                    while (v) {
-                        int tmp = match[pre[v]];
-                        match[v] = pre[v];
-                        match[pre[v]] = v;
-                        v = tmp;
-                    }
-                    flag = true;
-                    ++ans;
-                    break;
-                }
-                q.push(match[v]);
-            }
-        }
-        if (flag)
-            break;
-    }
-}
-```
 
 ##### 网络流建模
 
@@ -338,110 +354,9 @@ $pre_u, match_u$ 变量与增广路算法保持一致。
 
 于是完成了一次缩花，本次缩花并未增加匹配数。
 
----
-
-代码实现
-
-```cpp
-int f[1005];
-static inline int find(int x) {
-    if (f[x] == x) {
-        return x;
-    }
-    return f[x] = find(f[x]);
-}
-
-int col[1005];
-int pre[1005];
-int match[1005];
-bool vis[1005];
-queue<int> q;
-
-static inline int lca(int u, int v) { // 寻找总花根
-    memset(vis, false, sizeof vis);
-    u = find(u); // 跳到分花根
-    v = find(v);
-    while (!vis[u]) {
-        vis[u] = true;
-        u = find(pre[match[u]]);
-        if (v)
-            swap(u, v);
-    }
-    return u;
-}
-
-static inline void shrink(int u, int v, int rt) { // 收缩
-    while (find(u) != rt) {
-        pre[u] = v;
-        v = match[u];
-        if (col[v] == 2) { // 向外増广
-            col[v] = 1;
-            q.push(v);
-        }
-        if (find(u) == u) { // 合并到总花根上
-            f[u] = rt;
-        }
-        if (find(v) == v) {
-            f[v] = rt;
-        }
-        u = pre[v];
-    }
-}
-
-static inline int BlossomAlgorithm() {
-    int ans = 0;
-    for (int i = 1; i <= n; ++i) {
-        if (match[i])
-            continue;
-        memset(col, 0, sizeof col);
-        for (int j = 1; j <= n; ++j)
-            f[j] = j;
-        while (!q.empty())
-            q.pop();
-        q.push(i);
-        col[i] = 1;
-        bool flag = false;
-        while (!q.empty()) {
-            int u = q.front();
-            q.pop();
-            for (auto v : vec[u]) {
-                if (!col[v]) {
-                    pre[v] = u;
-                    if (!match[v]) {
-                        while (v) { // 增广
-                            int tmp = match[pre[v]];
-                            match[v] = pre[v];
-                            match[pre[v]] = v;
-                            v = tmp;
-                        }
-                        flag = true;
-                        ++ans;
-                        break;
-                    }
-                    col[v] = 2;
-                    col[match[v]] = 1;
-                    q.push(match[v]);
-                } else {
-                    if (find(u) == find(v)) // 已经在同一朵花内
-                        continue;
-                    if (col[v] == 1) { // 奇环
-                        int rt = lca(u, v);
-                        shrink(u, v, rt); // 收缩 u - rt
-                        shrink(v, u, rt); // 收缩 v - rt
-                    }
-                }
-            }
-            if (flag)
-                break;
-        }
-    }
-    return ans;
-}
-```
-
 **例题** P6113
 
-**参考** [一般图最大匹配学习笔记 - Luogu lanos212](https://www.luogu.com.cn/article/yrj6im2x) [一般图最大匹配 - OI Wiki](https://oi-wiki.org/graph/graph-matching/general-match/)
+**参考** [一般图最大匹配学习笔记 - Luogu - lanos212](https://www.luogu.com.cn/article/yrj6im2x) [一般图最大匹配 - OI Wiki](https://oi-wiki.org/graph/graph-matching/general-match/)
 
 ## 字符串
 
@@ -471,31 +386,31 @@ $$hs_s = \sum\limits_{i = 1}^{|s|} s_i \cdot base^{|s| - i}$$
 
 还有很多不同的哈希方法，例如 [基于 sin 的 Hash](https://www.luogu.com.cn/article/ih4e3v2o)、[APHash](https://ieeexplore.ieee.org/document/8462326/) [等](https://www.cnblogs.com/Stomach-ache/p/3724836.html)。
 
-#### 哈希冲突概率
-
-对标准字符串哈希计算冲突概率，即 $hs = \sum\limits_{i = 1}^{n}base^{i - 1} \cdot s_i$。
-
-形式化地，定义 $S$ 为输入空间，$T$ 为目标空间，$N = |T|$，$K$ 为输入样本数，$f$ 为哈希映射，有
-
-$$S \stackrel{f} \longrightarrow T$$
-
-假设映射 $f$ 遵从均匀分布，类比生日悖论，有（`collision` 是“碰撞”的英文）
-
-$$P_{collision, N} = 1 - \sum\limits_{i = 0}^{K - 1}\frac i N$$
-
-有估计
-
-$$\lim_{K \rightarrow \infty} P_{collision, N} \sim 1 - e^{- \frac {K(K - 1)} {2N}}$$
-
-可以发现，目标空间大小越大，则越不容易发生哈希冲突。
-
-只需考虑如何设计一个趋近于均匀分布的哈希映射。
-
-这是很难的，据实验，常见字符串哈希算法难以达到此效果。
-
-我曾考虑使用方差分析其均匀分布程度，但是忘记实现了。因此我们不妨使用 $\begin{cases} base &= 31 \\ mod &= 37191016349 \end{cases}$ 吧。
-
 **例题** P4513, P6688
+
+### 后缀数组
+
+定义 $sa_i$ 表示排序后第 $i$ 小的后缀，$rk_i$ 表示后缀 $i$ 的排名。
+
+#### $O(n \log^2 n)$ 求法
+
+基于倍增思想，先处理所有长度为 $1$ 的子串的 $sa$ 和 $rk'$ 数组。
+
+假设已处理出长度为 $w$ 的子串的答案，从 $w$ 推向 $2w$：  
+以 $rk'_i$ 作为第一关键字，$rk'_{i + w}$ 作为第二关键字对 $sa$ 进行排序。  
+即对每个子串 $s[i \dots \min\{i + w - 1, n\}]$ 排序。  
+特别地，当 $i + w > n$ 时，认为 $rk'_{i + w}$ 足够小。  
+然后根据排序后的 $sa$ 数组重新处理 $rk'$ 数组即可。
+
+#### $O(n \log n)$ 求法
+
+发现上面方法的一个复杂度瓶颈在于排序算法是 $O(n \log n)$ 的。但实际上关键字值域只有 $O(n)$ 级别（除第一次排序外），可以考虑基于值域的排序方式。因为需要二维关键字排序，所以使用[基数排序](https://oi.wiki/basic/radix-sort/)，可以实现 $O(n \log n)$。
+
+#### SA-IS
+
+一种线性进行后缀排序的算法。参见：[诱导排序与 SA-IS 算法](https://riteme.site/blog/2016-6-19/sais.html)。
+
+**例题** P3809, P4051
 
 ## 数论
 
