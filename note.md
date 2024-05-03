@@ -180,6 +180,158 @@ $$dp[u][j] = \max\{dp[v][j - k] + dp[v][k]\}$$
 
 ## 图论
 
+### 最短路
+
+#### Floyd 算法求任意两点间最短路
+
+适用于无负环的图。`dis` 是一个邻接表。
+
+```cpp
+for (int k = 1; k <= n; ++k)
+    for (int i = 1; i <= n; ++i)
+        for (int j = 1; j <= n; ++j)
+            dis[i][j] = min(dis[i][j], dis[i][k] + dis[k][j]);
+```
+
+可以用于求解图上**传递闭包**。
+
+#### Dijsktra 算法
+
+在非负权图上有效。
+
+```cpp
+priority_queue<pair<int, int>,
+               vector<pair<int, int>>,
+               greater<pair<int, int>>>
+    q;
+memset(dis, 0x3f, sizeof dis);
+q.push({0, s});
+dis[s] = 0;
+while (!q.empty()) {
+    auto [d, u] = q.top();
+    q.pop();
+    if (d != dis[u])
+        continue;
+    for (auto [v, w] : vec[u]) {
+        int ww = d + w;
+        if (ww < dis[v]) {
+            dis[v] = ww;
+            q.push({ww, v});
+        }
+    }
+}
+```
+
+#### Johnson 全源最短路算法
+
+建超级原点 $0$ 向所有点连权值为 $0$ 的边，一次 SPFA 求出 $0$ 到每个点的最短路 $h_i$。令边 $(u, v, w)$ 的边权为 $h_v - h_u + w$，可以证明处理后的所有边权非负。然后从每个点开始跑 Dijsktra 求出最短路 $dis_{i, j}$，实际最短路长度为 $dis_{i, j} + dis_i - dis_j$。
+
+[代码](https://www.luogu.com.cn/record/157749483)
+
+**好题**
+
+- P1462 通往奥格瑞玛的道路
+- CF1051F The Shortest Statement
+
+### 树论
+
+#### 树链剖分
+
+树链剖分是将树转化为序列的一种方法。
+
+常见的剖分方式是**重链剖分**，即每次连接链到重儿子。重儿子定义为所有儿子中子树大小最大的那个。重链剖分可以保证树上任意路径被分为 $O(\log n)$ 条链。
+
+剖分成链后，对每个点打上 $dfn$ 序，优先遍历重儿子，这样可以使得同一条链内的节点的 $dfn$ 序连续，结合线段树等数据结构可以快速处理链上信息。
+
+可以结合 $low$ 序处理子树信息。（P3178）
+
+需要指出，如果有编号为 $0$ 的点，需要特别注意是否有重儿子的判断。（P5829）
+
+重链剖分代码如下
+
+```cpp
+static inline void dfs(int u, int fa) {
+    f[u] = fa;
+    dep[u] = dep[fa] + 1;
+    siz[u] = 1;
+    for (auto v : vec[u]) {
+        if (v == fa)
+            continue;
+        dfs(v, u);
+        siz[u] += siz[v];
+        if (siz[v] > siz[son[u]])
+            son[u] = v;
+    }
+}
+static inline void dfs2(int u) {
+    dfn[u] = ++dfn_clock;
+    if (!son[u])
+        return;
+    top[son[u]] = top[u];
+    dfs2(son[u]);
+    for (auto v : vec[u]) {
+        if (v == f[u] || v == son[u])
+            continue;
+        top[v] = v;
+        dfs2(v);
+    }
+}
+```
+
+$x, y$ 之间的路径信息可以通过如下方式得到
+
+```cpp
+while (top[x] != top[y]) {
+    if (dep[top[x]] < dep[top[y]])
+        swap(x, y);
+    ans += calc(dfn[top[x]], dfn[x]);
+    x = f[top[x]];
+}
+if (dep[x] > dep[y])
+    swap(x, y);
+ans += calc(dfn[x], dfn[y]);
+```
+
+$\text{LCA}(x, y)$ 可以通过如下方式求得
+
+```cpp
+static inline int LCA(int x, int y) {
+    while (top[x] != top[y]) {
+        if (dep[top[x]] < dep[top[y]])
+            swap(x, y);
+        x = f[top[x]];
+    }
+    if (dep[x] < dep[y])
+        return x;
+    return y;
+}
+```
+
+**例题** P2590, P3178, P3313, P3384, P4116
+
+**好题**
+
+- P5773 [JSOI2016] 轻重路径
+
+#### 树的重心
+
+树的重心定义为删去该点后分裂得到的子树最大大小不超过原树大小一半的点，满足以下性质：
+
+- 树的重心至多有两个，且如果有两个重心，这两个重心相邻；
+- 树中所有点到到重心的距离之和是最小的；
+- 把两棵树通过一条边连接得到一棵新树，新树的重心在连接两棵原树的重心的路径上；
+- 在树上添加或删除一个叶子节点，那么它的重心至多移动到原重心的相邻节点。
+
+#### 点分治 / 点分树
+
+点分治用于处理树上路径问题。
+
+点分治的过程是：在一棵树上选择任意一个节点作为根，处理其他所有点到它的路径的信息，于是所有经过该点的路径都被考虑，删去该点并递归考虑分裂得到的子树。
+
+为了保证复杂度，每次选择的节点应该为**树的重心**，这样点分治的复杂度为 $O(n \log n)$
+
+**例题** P3806, P4178, P6626
+
 ### 图的生成树
 
 图的生成树是图的一个无环连通子图，且如果两点在图上连通，它们在生成树上仍连通。
