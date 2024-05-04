@@ -354,7 +354,7 @@ Kruskal 重构树有以下性质：
 - 如果原图不连通，则 Kruskal 重构树是重构树森林，每棵树独立满足所有 Kruskal 重构树的性质；
 - 重构树上至多有 $2 \cdot n - 1$ 个节点，当且仅当原图连通时取等。
 
-**例题** P1967, P7834, P9235
+**例题** P1967, P4768, P7834, P9235
 
 **参考** [Kruskal 重构树总结 - Luogu - LawrenceSivan](https://www.luogu.com.cn/article/jzk4d839)
 
@@ -629,6 +629,10 @@ $$n = \sum\limits_{d \mid n}\varphi(d)$$
 
 $$(i, j) = \sum\limits_{d \mid (i, j)}\varphi(d)$$
 
+**性质 2**
+
+$$\sum\limits_{i = 1}^{n} i [i \nmid n] = \frac {n \varphi(n)} {2}$$
+
 **线性筛**
 
 ```cpp
@@ -782,6 +786,135 @@ $$a_1x_1 + a_2x_2 + \dots + a_nx_n = c$$
 ### 连分数理论
 
 ## 数值算法和线性代数
+
+### 高斯消元法
+
+高斯消元法是用于解线性方程的快捷方法。
+
+任何一个线性方程 $a_1x_1 + a2_x2 + a_3x_3 + \dots + a_nx_n = b$ 都可以写成行向量
+
+$$\left(\begin{array}{ccccc|c} a_1 & a_2 & a_3 & \dots & a_n & b \end{array}\right)$$
+
+打包 $n$ 个这样的方程，可以得到一个矩阵
+
+$$
+\left(\begin{array}{ccccc|c}
+a_{11} & a_{12} & a_{13} & \dots & a_{1n} & b_1 \\
+a_{21} & a_{22} & a_{23} & \dots & a_{2n} & b_2 \\
+a_{31} & a_{32} & a_{33} & \dots & a_{3n} & b_3 \\
+\vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+a_{n1} & a_{n2} & a_{n3} & \dots & a_{nn} & b_n \\
+\end{array}\right)
+$$
+
+高斯消元的目标是将左边化为单位矩阵，右边的列向量即为方程的解。
+
+如果左边不能化为单位矩阵，则此方程无解或有无数多解，这两种情况的区分见 P2455。
+
+**例题** P2455, P3389
+
+```cpp
+for (int i = 1; i <= n; ++i) {
+    for (int j = i; j <= n; ++j) {
+        if (a[j][i] != 0) {
+            swap(a[i], a[j]);
+            break;
+        }
+    }
+    if (a[i][i] == 0) {
+        cout << "No Solution" << endl;
+        return 0;
+    }
+    double tmp = 1. / a[i][i];
+    for (int j = i; j <= n + 1; ++j) {
+        a[i][j] *= tmp;
+    }
+    for (int j = 1; j <= n; ++j) {
+        if (i == j) {
+            continue;
+        }
+        double tt = a[j][i] / a[i][i];
+        for (int k = i; k <= n + 1; ++k) {
+            a[j][k] -= tt * a[i][k];
+        }
+    }
+}
+```
+
+---
+
+使用实例说明此过程，解方程：
+
+$$
+\begin{cases}
+3x + 5y + 6z = 11 \\
+3x + 5y + 4z = 3 \\
+x + 2y + 3z = 6 \\
+\end{cases}
+$$
+
+写作矩阵
+
+$$
+\det A_0 =
+\left(\begin{array}{ccc|c}
+3 & 5 & 6 & 11 \\
+3 & 5 & 4 & 3 \\
+1 & 2 & 3 & 6 \\
+\end{array}\right)
+$$
+
+将第 $1$ 行整体除以 $3$，其他行减去若干倍的第一行使得它们的第一列为 $0$，得
+
+$$
+\det A_1 =
+\left(\begin{array}{ccc|c}
+1 & \frac 5 3 & 2 & \frac {11} 3 \\
+0 & 0 & -2 & -8 \\
+0 & \frac 1 3 & 1 & \frac 7 3 \\
+\end{array}\right)
+$$
+
+交换行使得 $A'_{1_{22}} \ne 0$
+
+$$
+\det A'_1 =
+\left(\begin{array}{ccc|c}
+1 & \frac 5 3 & 2 & \frac {11} 3 \\
+0 & \frac 1 3 & 1 & \frac 7 3 \\
+0 & 0 & -2 & -8 \\
+\end{array}\right)
+$$
+
+$$
+\det A_2 =
+\left(\begin{array}{ccc|c}
+1 & 0 & -3 & -8 \\
+0 & 1 & 3 & 7 \\
+0 & 0 & -2 & -8 \\
+\end{array}\right)
+$$
+
+$$
+\det A_3 =
+\left(\begin{array}{ccc|c}
+1 & 0 & 0 & 4 \\
+0 & 1 & 0 & -5 \\
+0 & 0 & 1 & 4 \\
+\end{array}\right)
+$$
+
+所以该方程的解为
+
+$$
+\begin{cases}
+x = 4 \\
+y = -5 \\
+z = 5 \\
+\end{cases}
+$$
+
+### 矩阵优化递推
 
 ## 计算几何
 
